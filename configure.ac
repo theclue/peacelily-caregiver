@@ -7,15 +7,16 @@ AC_PREREQ([2.69])
 AC_INIT([Take Care of Me], [0.0.1], [gabriele@gabrielebaldassarre.com], , [https://github.com/theclue/peacelily-caregiver])
 
 AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-aux])
 
-BUILD_PLATFORM=unknown
-WINDOWS_BUILD=no
+AM_INIT_AUTOMAKE([subdir-objects -Wall -Werror])
+
 TEMP_DIR="${TMPDIR:-/tmp}"
 
 dnl C Stack
 AC_PROG_CC
 
-AC_CONFIG_SRCDIR([src/gpio.c])
+AC_CONFIG_SRCDIR([src/wiringPi-stub/wiringPi.c])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -43,38 +44,34 @@ AC_CHECK_TOOL([RSCRIPT], [Rscript], [no])
 AC_ASSERT_PROG([Rscript], [$RSCRIPT])
 
 dnl Build Stack
-
-AC_MSG_CHECKING([for build platform])
 # see https://stackoverflow.com/questions/714100/os-detecting-makefile
 # but we do this in the configure for homogeneity
-case "${OS}" in
-    Windows_NT*)
-        BUILD_PLATFORM=Windows
-        ;;
-    *)
-        uname_str=`uname -s`
-        case "${uname_str}" in
-            Linux*)
-                BUILD_PLATFORM=Linux
-                ;;
-            Darwin*)
-                BUILD_PLATFORM=Darwin
-                TEMP_DIR=`getconf DARWIN_USER_TEMP_DIR`
-                ;;
-            cygwin*|mingw*)
-                BUILD_PLATFORM=Windows
-                ;;
-            *)
-                AC_MSG_ERROR(["OS $unamestr is not supported"])
-                ;;
-        esac
-esac
-AC_MSG_RESULT([$BUILD_PLATFORM])
-AC_SUBST([BUILD_PLATFORM])
 
-AC_MSG_CHECKING([for Windows build])
-AS_IF([test x"$BUILD_PLATFORM" = x"Windows"], [WINDOWS_BUILD=yes])
-AC_MSG_RESULT([$WINDOWS_BUILD])
+dnl This is used to get some system properties
+AC_CHECK_TOOL([GETCONF], [getconf], [no])
+
+AC_CANONICAL_HOST
+AS_CASE([$host_os],
+        [linux*],
+        [
+           BUILD_PLATFORM=Linux
+        ],
+        [darwin*],
+        [
+           BUILD_PLATFORM=Darwin
+           AS_IF([test x"$GETCONF" != x"no"], [TEMP_DIR=`"$GETCONF" DARWIN_USER_TEMP_DIR`])
+
+        ],
+        [cygwin*|mingw*],
+        [
+            BUILD_PLATFORM=Windows
+        ],
+        AC_MSG_ERROR(["OS $host_os is not yet supported"]))
+
+AC_SUBST([BUILD_PLATFORM])
+AC_SUBST([TEMP_DIR])
+
+AM_CONDITIONAL([WINDOWS_BUILD], [test x"$BUILD_PLATFORM" = x"Windows"])
 
 dnl This part is needed to ensure a proper build process under OSX
 
@@ -89,10 +86,6 @@ AS_IF(
         [XCODE_BASE=$XCODE_SELECT_OUT HAS_OBJC=yes],
   [HAS_OBJC=no])
 
-AC_SUBST([BUILD_PLATFORM])
-AC_SUBST([WINDOWS_BUILD])
-AC_SUBST([TEMP_DIR])
-
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
@@ -103,18 +96,20 @@ dnl This is for a better OSX build experience
 AC_CHECK_TOOL([BREW], [brew], [no])
 
 dnl Check the number of available core here for
-dnl better consistency
-AC_CHECK_TOOL([GETCONF], [getconf], [no])
+dnl faster building process
 AC_MSG_CHECKING([the number of cpus the build host has])
-if test "$GETCONF" != "no"; then
-  if test $("$GETCONF" _NPROCESSORS_ONLN); then
-    NCPU=$("$GETCONF" _NPROCESSORS_ONLN)
-    AC_MSG_RESULT([$NCPU])
-  fi
-else
-  NCPU=1
-  AC_MSG_RESULT([failed, defaulting to 1])
-fi
+AS_IF(
+    [test "$GETCONF" != "no"],
+    AS_IF(
+        [test $("$GETCONF" _NPROCESSORS_ONLN)],
+        [
+            NCPU=$("$GETCONF" _NPROCESSORS_ONLN)
+            AC_MSG_RESULT([$NCPU])
+        ]),
+    [
+        NCPU=1
+        AC_MSG_RESULT([failed, defaulting to 1])
+    ])
 AC_SUBST([NCPU])
 
 AC_CONFIG_FILES([Makefile])
