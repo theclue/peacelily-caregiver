@@ -105,4 +105,7 @@ Makefile
 
 /build-aux
 /config.h*
+libtool
+*.pc
+.libs
 
