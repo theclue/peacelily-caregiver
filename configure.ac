@@ -4,27 +4,49 @@ dnl LICENSE file in the root directory of this source tree.
 dnl autoconf script for Take care of me
 
 AC_PREREQ([2.69])
+
 AC_INIT([Take Care of Me], [0.0.1], [gabriele@gabrielebaldassarre.com], , [https://github.com/theclue/peacelily-caregiver])
-
-WIRINGPI_STUB_SOVERSION=1:0:0
-
-
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
-LT_INIT([disable-static shared])
-LT_LANG([C++])
-
-AM_INIT_AUTOMAKE([subdir-objects -Wall -Werror])
-
-AM_PROG_AR
+## ------------------ ##
+## Generic variables. ##
+## ------------------ ##
+WIRINGPI_STUB_SOVERSION=1:0:0
 
 AC_SUBST([LIBTOOL_DEPS])
 AC_SUBST([WIRINGPI_STUB_SOVERSION])
 
 TEMP_DIR="${TMPDIR:-/tmp}"
 
-dnl C Stack
+## ------------------------ ##
+## Automake initialisation. ##
+## ------------------------ ##
+AM_INIT_AUTOMAKE([subdir-objects dist-xz -Wall -Werror])
+AM_SILENT_RULES([yes])
+
+AM_PROG_AR
+
+
+## ----------------------- ##
+## Libtool initialisation. ##
+## ----------------------- ##
+LT_INIT([disable-static shared])
+LT_LANG([C++])
+
+## ------------------------- ##
+## Autobuild initialisation. ##
+## ------------------------- ##
+
+# You can set autobuild_mode at configure time to specify a "unique"
+# string for this build.
+: ${autobuild_mode=default}
+AB_VERSION='AC_PACKAGE_VERSION'
+AB_INIT([$autobuild_mode])
+
+## -------------------------- ##
+## C Compiler initialization. ##
+## -------------------------- ##
 AC_PROG_CC
 
 AC_CONFIG_SRCDIR([src/wiringPi-stub/wiringPi.c])
@@ -50,15 +72,19 @@ AC_CHECK_HEADERS([stdint.h stdlib.h string.h err.h])
 
 AC_DEFINE_UNQUOTED([RELEASE], ["$PACKAGE_VERSION"], [convenience define used for release number in various point of the package])
 
-dnl R Stack
+## ----------------------------- ##
+## R interpreter initialization. ##
+## ----------------------------- ##
 AC_CHECK_TOOL([RSCRIPT], [Rscript], [no])
 AC_ASSERT_PROG([Rscript], [$RSCRIPT])
 
-dnl Build Stack
+## ------------------------------- ##
+## Host and Target initialization. ##
+## ------------------------------- ##
+
 # see https://stackoverflow.com/questions/714100/os-detecting-makefile
 # but we do this in the configure for homogeneity
 
-dnl This is used to get some system properties
 AC_CHECK_TOOL([GETCONF], [getconf], [no])
 
 AC_CANONICAL_HOST
@@ -81,8 +107,6 @@ AS_CASE([$host_os],
 
 AC_SUBST([BUILD_PLATFORM])
 AC_SUBST([TEMP_DIR])
-
-AM_CONDITIONAL([WINDOWS_BUILD], [test x"$BUILD_PLATFORM" = x"Windows"])
 
 dnl This part is needed to ensure a proper build process under OSX
 
@@ -125,10 +149,15 @@ AC_SUBST([NCPU])
 
 AC_ARG_ENABLE(wiringpi-stub,
   AS_HELP_STRING([--disable-wiringpi-stub],
-    [do not build the WiringPi Stub library (default is to build it)]),
+    [do not build the WiringPi Stub shared alibrary (default is to build it)]),
   ,
   enable_wiringpi_stub=yes)
+
+## ---------------------- ##
+## Automake conditionals. ##
+## ---------------------- ##
 AM_CONDITIONAL([BUILD_WIRINGPI_STUB], [test x"$enable_wiringpi-stub" = x"yes"])
+AM_CONDITIONAL([WINDOWS_BUILD], [test x"$BUILD_PLATFORM" = x"Windows"])
 
 AC_CONFIG_FILES([Makefile src/wiringPi-stub/libwiringPiStub.pc])
 
