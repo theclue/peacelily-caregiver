@@ -156,7 +156,7 @@ AC_ARG_ENABLE(wiringpi-stub,
 ## ---------------------- ##
 ## Automake conditionals. ##
 ## ---------------------- ##
-AM_CONDITIONAL([BUILD_WIRINGPI_STUB], [test x"$enable_wiringpi-stub" = x"yes"])
+AM_CONDITIONAL([BUILD_WIRINGPI_STUB], [test x"$enable_wiringpi_stub" = x"yes"])
 AM_CONDITIONAL([WINDOWS_BUILD], [test x"$BUILD_PLATFORM" = x"Windows"])
 
 AC_CONFIG_FILES([Makefile src/wiringPi-stub/libwiringPiStub.pc])
