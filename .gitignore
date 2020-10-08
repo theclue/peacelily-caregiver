@@ -109,5 +109,7 @@ libtool
 *.pc
 .libs
 
+# Docs specific rules
 /docs/metadata.yml
+!/docs/Makefile.in
 
