@@ -5,7 +5,7 @@ dnl autoconf script for Take care of me
 
 AC_PREREQ([2.69])
 
-AC_INIT([Take Care of Me], [0.0.1], [gabriele@gabrielebaldassarre.com], , [https://github.com/theclue/peacelily-caregiver])
+AC_INIT([Take Care of Me], [0.0.1], [https://github.com/theclue/peacelily-caregiver/issues], , [https://github.com/theclue/peacelily-caregiver])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
 
@@ -26,7 +26,6 @@ AM_INIT_AUTOMAKE([subdir-objects dist-xz -Wall -Werror])
 AM_SILENT_RULES([yes])
 
 AM_PROG_AR
-
 
 ## ----------------------- ##
 ## Libtool initialisation. ##
@@ -77,6 +76,32 @@ AC_DEFINE_UNQUOTED([RELEASE], ["$PACKAGE_VERSION"], [convenience define used for
 ## ----------------------------- ##
 AC_CHECK_TOOL([RSCRIPT], [Rscript], [no])
 AC_ASSERT_PROG([Rscript], [$RSCRIPT])
+
+## -------------------------------- ##
+## Latex environment initialization ##
+## -------------------------------- ##
+AC_CHECK_TOOL([PANDOC], [pandoc], [no])
+AC_CHECK_TOOL([ASCIIDOCTOR], [asciidoctor], [no])
+AC_CHECK_TOOL([EBOOK_CONVERT], [ebook-convert], [no])
+AC_CHECK_TOOL([MDMERGE], [mdmerge], [no])
+AC_CHECK_TOOL([XELATEX], [xelatex], [no])
+AC_CHECK_TOOL([PDFTOPPM], [pdftoppm], [no])
+
+AC_CHECK_TOOL([TAR], [tar], [no])
+
+AC_SUBST([PANDOC])
+AC_SUBST([ASCIIDOCTOR])
+AC_SUBST([EBOOK_CONVERT])
+AC_SUBST([MDMERGE])
+AC_SUBST([XELATEX])
+AC_SUBST([PDFTOPPM])
+AC_SUBST([TAR])
+
+AC_ARG_WITH(manual,
+  AS_HELP_STRING([--with-manual],
+    [build the user and system manual (default is to not build it)]),
+  ,
+  with_manual=yes)
 
 ## ------------------------------- ##
 ## Host and Target initialization. ##
@@ -158,7 +183,8 @@ AC_ARG_ENABLE(wiringpi-stub,
 ## ---------------------- ##
 AM_CONDITIONAL([BUILD_WIRINGPI_STUB], [test x"$enable_wiringpi_stub" = x"yes"])
 AM_CONDITIONAL([WINDOWS_BUILD], [test x"$BUILD_PLATFORM" = x"Windows"])
+AM_CONDITIONAL([WITH_MANUAL], [test x"with_manual" = x"yes"])
 
-AC_CONFIG_FILES([Makefile src/wiringPi-stub/libwiringPiStub.pc])
+AC_CONFIG_FILES([Makefile docs/Makefile docs/metadata.yml src/wiringPi-stub/libwiringPiStub.pc])
 
 AC_OUTPUT

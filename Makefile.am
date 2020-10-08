@@ -5,7 +5,7 @@ lib_LTLIBRARIES =
 if BUILD_WIRINGPI_STUB
     lib_LTLIBRARIES += libwiringPiStub.la
 
-    # headers to be installed
+    # Stubbed wiringPi headers to be installed
     include_HEADERS = \
     src/wiringPi-stub/wiringPi.h
 endif
