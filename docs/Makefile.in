@@ -23,8 +23,6 @@ MATH_FORMULAS   = --webtex
 MKDIR_P         = @MKDIR_P@
 TAR             = @TAR@
 
-ASCIIDOCTOR     = @ASCIIDOCTOR@
-EBOOK_CONVERT   = @EBOOK_CONVERT@
 MDMERGE         = @MDMERGE@
 PANDOC          = @PANDOC@
 PDF_ENGINE      = @XELATEX@
@@ -48,8 +46,6 @@ clean:
 
 markdown: $(BUILD)/markdown/$(OUTPUT_FILENAME).Md
 
-mobi: $(BUILD)/mobi/$(OUTPUT_FILENAME).mobi
-
 epub: $(BUILD)/epub/$(OUTPUT_FILENAME).epub
 
 html: $(BUILD)/html/$(OUTPUT_FILENAME).html.tar.gz
@@ -63,10 +59,6 @@ png: pdf
 $(BUILD)/markdown/$(OUTPUT_FILENAME).Md: $(CHAPTERS_TARGETS)
     $(MKDIR_P) $(BUILD)/markdown
     $(MDMERGE) $(CHAPTERS_TARGETS) -o $(BUILD)/markdown/$(OUTPUT_FILENAME).Md
-
-$(BUILD)/mobi/$(OUTPUT_FILENAME).mobi: epub
-    $(MKDIR_P) $(BUILD)/mobi
-    $(EBOOK_CONVERT) $(BUILD)/epub/$(OUTPUT_FILENAME).epub $(BUILD)/mobi/$(OUTPUT_FILENAME).mobi
 
 $(BUILD)/epub/$(OUTPUT_FILENAME).epub: $(MAKEFILE) $(METADATA) $(CHAPTERS_TARGETS) $(CSS_FILE) $(IMAGES) \
                                                                              $(COVER_IMAGE)

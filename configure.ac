@@ -77,31 +77,59 @@ AC_DEFINE_UNQUOTED([RELEASE], ["$PACKAGE_VERSION"], [convenience define used for
 AC_CHECK_TOOL([RSCRIPT], [Rscript], [no])
 AC_ASSERT_PROG([Rscript], [$RSCRIPT])
 
-## -------------------------------- ##
-## Latex environment initialization ##
-## -------------------------------- ##
-AC_CHECK_TOOL([PANDOC], [pandoc], [no])
-AC_CHECK_TOOL([ASCIIDOCTOR], [asciidoctor], [no])
-AC_CHECK_TOOL([EBOOK_CONVERT], [ebook-convert], [no])
-AC_CHECK_TOOL([MDMERGE], [mdmerge], [no])
-AC_CHECK_TOOL([XELATEX], [xelatex], [no])
-AC_CHECK_TOOL([PDFTOPPM], [pdftoppm], [no])
+## ---------------------- ##
+## General purpose tools. ##
+## ---------------------- ##
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_MKDIR_P
+AC_PROG_SED
 
 AC_CHECK_TOOL([TAR], [tar], [no])
 
-AC_SUBST([PANDOC])
-AC_SUBST([ASCIIDOCTOR])
-AC_SUBST([EBOOK_CONVERT])
-AC_SUBST([MDMERGE])
-AC_SUBST([XELATEX])
-AC_SUBST([PDFTOPPM])
-AC_SUBST([TAR])
+## -------------------------------- ##
+## Latex environment initialization ##
+## -------------------------------- ##
 
-AC_ARG_WITH(manual,
-  AS_HELP_STRING([--with-manual],
-    [build the user and system manual (default is to not build it)]),
+AC_ARG_WITH(docs,
+  AS_HELP_STRING([--with-docs], [build the user and system manual (default is to not build it)]),
   ,
-  with_manual=yes)
+  with_docs=no)
+
+AS_IF([test "x$with_docs" != "xno"],
+      [
+        AC_CHECK_TOOL([PANDOC], [pandoc], [no])
+        AC_CHECK_TOOL([MDMERGE], [mdmerge], [no])
+        AC_CHECK_TOOL([XELATEX], [xelatex], [no])
+        AC_CHECK_TOOL([PDFTOPPM], [pdftoppm], [no])
+
+        AC_MSG_CHECKING([if the docs can be built])
+
+        AS_IF([test "x$PANDOC" != "xno" || test "x$MDMERGE" != "xno" || test "x$XELATEX" != "xno" || test "x$PDFTOPPM" != "xno"],
+          [
+            can_docs=yes
+          ],
+          [
+            can_docs=no
+          ])
+        AC_MSG_RESULT([$can_docs])
+      ],
+      [can_docs=no])
+
+AS_IF([test "x$can_docs" = "xyes"],
+      [
+        AC_SUBST([PANDOC])
+        AC_SUBST([MDMERGE])
+        AC_SUBST([XELATEX])
+        AC_SUBST([PDFTOPPM])
+
+      ],
+      [AS_IF([test "x$with_docs" = "xyes"],
+             [AC_MSG_WARN([docs generation was requested, but no suitable pandoc/latex binaries were found on the host system. Setting ignored])
+      ])
+])
+
 
 ## ------------------------------- ##
 ## Host and Target initialization. ##
@@ -130,9 +158,6 @@ AS_CASE([$host_os],
         ],
         AC_MSG_ERROR(["OS $host_os is not yet supported"]))
 
-AC_SUBST([BUILD_PLATFORM])
-AC_SUBST([TEMP_DIR])
-
 dnl This part is needed to ensure a proper build process under OSX
 
 AC_CHECK_TOOL([XCODE_SELECT], [xcode-select], [no])
@@ -145,12 +170,6 @@ AS_IF(
   [test "x$XCODE_SELECT" != "xno"],
         [XCODE_BASE=$XCODE_SELECT_OUT HAS_OBJC=yes],
   [HAS_OBJC=no])
-
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PROG_MAKE_SET
-AC_PROG_MKDIR_P
-AC_PROG_SED
 
 dnl This is for a better OSX build experience
 AC_CHECK_TOOL([BREW], [brew], [no])
@@ -178,13 +197,21 @@ AC_ARG_ENABLE(wiringpi-stub,
   ,
   enable_wiringpi_stub=yes)
 
+## ----- ##
+## Subs. ##
+## ----- ##
+AC_SUBST([BUILD_PLATFORM])
+AC_SUBST([TAR])
+AC_SUBST([TEMP_DIR])
+
 ## ---------------------- ##
 ## Automake conditionals. ##
 ## ---------------------- ##
 AM_CONDITIONAL([BUILD_WIRINGPI_STUB], [test x"$enable_wiringpi_stub" = x"yes"])
 AM_CONDITIONAL([WINDOWS_BUILD], [test x"$BUILD_PLATFORM" = x"Windows"])
-AM_CONDITIONAL([WITH_MANUAL], [test x"with_manual" = x"yes"])
+AM_CONDITIONAL([CAN_DOCS], [test x"$can_docs" = x"yes"])
+AM_COND_IF([CAN_DOCS], [AC_CONFIG_FILES([docs/Makefile docs/metadata.yml])])
 
-AC_CONFIG_FILES([Makefile docs/Makefile docs/metadata.yml src/wiringPi-stub/libwiringPiStub.pc])
+AC_CONFIG_FILES([Makefile src/wiringPi-stub/libwiringPiStub.pc])
 
 AC_OUTPUT

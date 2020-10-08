@@ -5,7 +5,6 @@ lib_LTLIBRARIES =
 if BUILD_WIRINGPI_STUB
     lib_LTLIBRARIES += libwiringPiStub.la
 
-    # Stubbed wiringPi headers to be installed
     include_HEADERS = \
     src/wiringPi-stub/wiringPi.h
 endif
@@ -18,3 +17,7 @@ libwiringPiStub_la_SOURCES = src/wiringPi-stub/wiringPi.c
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = src/wiringPi-stub/libwiringPiStub.pc
+
+if CAN_DOCS
+docs: ; $(MAKE) -C ./docs
+endif
